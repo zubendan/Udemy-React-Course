@@ -1,34 +1,37 @@
-import { useContext, useRef } from "react";
-import { useHistory } from "react-router";
+import { useRef, useContext } from "react";
+import { useHistory } from "react-router-dom";
 
 import AuthContext from "../../store/auth-context";
-
 import classes from "./ProfileForm.module.css";
 
 const ProfileForm = () => {
   const history = useHistory();
-  const authCtx = useContext(AuthContext);
 
-  const newPasswordRef = useRef();
+  const newPasswordInputRef = useRef();
+  const authCtx = useContext(AuthContext);
 
   const submitHandler = (event) => {
     event.preventDefault();
 
-    const enteredNewpassword = newPasswordRef.current.value;
+    const enteredNewPassword = newPasswordInputRef.current.value;
+
+    // add validation
 
     fetch(
-      "https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyBN2rqvTvdisf-PIcRz6EldQppIm07avxA",
+      "https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyBZhsabDexE9BhcJbGxnZ4DiRlrCN9xe24",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idToken: authCtx.token,
-          password: enteredNewpassword,
+          password: enteredNewPassword,
           returnSecureToken: false,
         }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
-    ).then((response) => {
-      //assumption of always succedding
+    ).then((res) => {
+      // assumption: Always succeeds!
 
       history.replace("/");
     });
@@ -42,7 +45,7 @@ const ProfileForm = () => {
           type="password"
           id="new-password"
           minLength="7"
-          ref={newPasswordRef}
+          ref={newPasswordInputRef}
         />
       </div>
       <div className={classes.action}>

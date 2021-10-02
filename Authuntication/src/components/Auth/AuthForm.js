@@ -1,18 +1,18 @@
 import { useState, useRef, useContext } from "react";
-import { useHistory } from "react-router";
+import { useHistory } from "react-router-dom";
 
 import AuthContext from "../../store/auth-context";
-
 import classes from "./AuthForm.module.css";
 
 const AuthForm = () => {
   const history = useHistory();
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
-  const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
 
   const authCtx = useContext(AuthContext);
+
+  const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
@@ -23,6 +23,8 @@ const AuthForm = () => {
 
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
+
+    // optional: Add validation
 
     setIsLoading(true);
     let url;
@@ -35,23 +37,26 @@ const AuthForm = () => {
     }
     fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: enteredEmail,
         password: enteredPassword,
         returnSecureToken: true,
       }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
       .then((res) => {
         setIsLoading(false);
         if (res.ok) {
           return res.json();
         } else {
-          return res.json().then(() => {
-            let errorMessage = "Auth failed";
+          return res.json().then((data) => {
+            let errorMessage = "Authentication failed!";
             // if (data && data.error && data.error.message) {
             //   errorMessage = data.error.message;
             // }
+
             throw new Error(errorMessage);
           });
         }
@@ -89,7 +94,7 @@ const AuthForm = () => {
           {!isLoading && (
             <button>{isLogin ? "Login" : "Create Account"}</button>
           )}
-          {isLoading && <p>Loading ...</p>}
+          {isLoading && <p>Sending request...</p>}
           <button
             type="button"
             className={classes.toggle}

@@ -1,14 +1,71 @@
+import { MongoClient, ObjectId } from "mongodb";
+
 import MeetupDetail from "../../components/meetups/MeetupDetail";
 
 const MeetupDetails = (props) => {
   return (
     <MeetupDetail
-      image="https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/St._Michael%27s_Cathedral%2C_Sitka.jpg/1280px-St._Michael%27s_Cathedral%2C_Sitka.jpg"
-      title="First Meetup"
-      address="Some Street 5, Some Street"
-      description="This is a first Meetup"
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}
     />
   );
+};
+
+export const getStaticPaths = async () => {
+  const client = await MongoClient.connect(
+    "mongodb+srv://administrator101:super_secure_password@cluster0.qymus.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const meetups = await meetupsCollection
+    .find(
+      {},
+      {
+        _id: 1,
+      }
+    )
+    .toArray();
+
+  client.close();
+  return {
+    fallback: false,
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
+  };
+};
+
+export const getStaticProps = async (context) => {
+  const meetupId = context.params.meetupId;
+
+  const client = await MongoClient.connect(
+    "mongodb+srv://administrator101:super_secure_password@cluster0.qymus.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const selectedMeetup = await meetupsCollection.findOne({
+    _id: ObjectId(meetupId),
+  });
+
+  client.close();
+
+  return {
+    props: {
+      meetupData: {
+        id: selectedMeetup._id.toString(),
+        title: selectedMeetup.title,
+        address: selectedMeetup.address,
+        image: selectedMeetup.image,
+        description: selectedMeetup.description,
+      },
+    },
+  };
 };
 
 export default MeetupDetails;

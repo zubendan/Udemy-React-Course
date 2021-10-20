@@ -1,34 +1,46 @@
+import Head from "next/head";
+import { MongoClient } from "mongodb";
+
 import MeetupList from "../components/meetups/MeetupList";
 
-const DUMMY_MEETUPS = [
-  {
-    id: "m1",
-    title: "First Meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/St._Michael%27s_Cathedral%2C_Sitka.jpg/1280px-St._Michael%27s_Cathedral%2C_Sitka.jpg",
-    someAddress: "Some Address 1, 123123 City",
-    description: "This is a first meetup",
-  },
-  {
-    id: "m2",
-    title: "Second Meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/St._Michael%27s_Cathedral%2C_Sitka.jpg/1280px-St._Michael%27s_Cathedral%2C_Sitka.jpg",
-    someAddress: "Some Address 1, 123123 City",
-    description: "This is a second meetup",
-  },
-  {
-    id: "m3",
-    title: "Third Meetup",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/St._Michael%27s_Cathedral%2C_Sitka.jpg/1280px-St._Michael%27s_Cathedral%2C_Sitka.jpg",
-    someAddress: "Some Address 1, 123123 City",
-    description: "This is a third meetup",
-  },
-];
-
-const HomePage = () => {
-  return <MeetupList meetups={DUMMY_MEETUPS} />;
+const HomePage = (props) => {
+  return (
+    <>
+      <Head>
+        <title>React Meetups</title>
+        <meta
+          name="description"
+          content="Browse a huge list of highly active React meetups!"
+        />
+      </Head>
+      <MeetupList meetups={props.meetups} />
+    </>
+  );
 };
+
+export async function getStaticProps() {
+  const client = await MongoClient.connect(
+    "mongodb+srv://administrator101:super_secure_password@cluster0.qymus.mongodb.net/meetups?retryWrites=true&w=majority"
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection("meetups");
+
+  const meetups = await meetupsCollection.find().toArray();
+
+  client.close();
+
+  return {
+    props: {
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString(),
+      })),
+    },
+    revalidate: 10,
+  };
+}
 
 export default HomePage;
